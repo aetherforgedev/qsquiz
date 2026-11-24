@@ -1,26 +1,257 @@
-import {questions,categories,sources} from './questions.js';
-const $=s=>document.querySelector(s),root=$('#app'),KEY='frischewissen-v1';
-const icons={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/>',grid:'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',shield:'<path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z"/><path d="m8 12 3 3 5-6"/>',tag:'<path d="M3 3h8l10 10-8 8L3 11V3Z"/><circle cx="7.5" cy="7.5" r="1"/>',spark:'<path d="m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z"/>'};
-const icon=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[n]||icons.spark}</svg>`;
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let saved={records:{},session:null},storageOK=true;
-try{const data=JSON.parse(localStorage.getItem(KEY));if(data&&typeof data.records==='object'&&data.records&&!Array.isArray(data.records)){saved.records=Object.fromEntries(Object.entries(data.records).filter(([id,v])=>questions.some(q=>q.id===id)&&v&&typeof v.right==='boolean'));}if(data?.session&&Array.isArray(data.session.items)&&data.session.items.length&&data.session.items.every(x=>questions.some(q=>q.id===x.id)&&Array.isArray(x.order)&&x.order.length===4&&new Set(x.order).size===4&&x.order.every(n=>[0,1,2,3].includes(n))&&(x.answer===null||[0,1,2,3].includes(x.answer)))&&Number.isInteger(data.session.index)&&data.session.index>=0&&data.session.index<data.session.items.length){saved.session=data.session;}}catch{storageOK=false;}
-let filter='all',mode='quick';
-function persist(){try{localStorage.setItem(KEY,JSON.stringify(saved));}catch{storageOK=false;}}
-export function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
-function stats(){const vals=Object.values(saved.records);return {seen:vals.length,right:vals.filter(v=>v.right).length,wrong:vals.filter(v=>!v.right).length};}
-function pool(){return questions.filter(q=>(filter==='all'||q.category===filter)&&(mode!=='review'||saved.records[q.id]?.right===false));}
-function focusMain(){root.querySelector('h1,h2')?.focus({preventScroll:true});window.scrollTo({top:0,behavior:'instant'});}
-function home(){const s=stats();root.innerHTML=`<section class="hero"><div class="hero-copy"><div class="eyebrow"><span class="mini-line"></span> SICHER AN DER THEKE</div><h1 tabindex="-1">Frisches Wissen.<br><em>Jeden Tag besser.</em></h1><p>Dein Training für die Frischetheke. Verstehe die Regeln, prüfe dein Wissen und geh mit einem guten Gefühl in die nächste Abfrage.</p><div class="hero-facts"><span>${questions.length} Fragen mit Erklärung</span><span>6 Themenbereiche</span><span>In deinem Tempo</span></div></div><div class="hero-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="art-leaf">${icon('shield')}</div><span class="art-caption">GUTE QUALITÄT<br>BEGINNT MIT WISSEN.</span><span class="art-star">✳</span></div></section>
-<section class="training-layout"><div class="topics"><div class="section-head"><div><div class="eyebrow">DEIN LERNSTOFF</div><h2>Was möchtest du üben?</h2></div><span class="subtle">Aus allen vier Lernseiten</span></div><div class="topic-grid"><button class="topic all-topic ${filter==='all'?'active':''}" data-filter="all" aria-pressed="${filter==='all'}"><span class="topic-icon">${icon('grid')}</span><span><strong>Alles zusammen</strong><small>Der komplette Wissensmix</small></span><span class="topic-count">${questions.length}</span><span class="selection-mark">✓</span></button>${categories.map(c=>`<button class="topic ${filter===c.id?'active':''}" data-filter="${c.id}" aria-pressed="${filter===c.id}"><span class="topic-icon" style="--icon-bg:${c.color}">${icon(c.symbol)}</span><span><strong>${c.name}</strong><small>${c.subtitle}</small></span><span class="topic-count">${questions.filter(q=>q.category===c.id).length}</span><span class="selection-mark">✓</span></button>`).join('')}</div><div class="editor-note"><span class="note-icon">i</span><p><strong>Deine Unterlagen. Verständlich erklärt.</strong><br>Originalthemen plus ergänzende Praxisfragen. Betriebliche Notizen und Fachwissen werden in den Lösungen eingeordnet.</p></div></div>
-<aside class="start-card"><div class="eyebrow">DEINE LERNRUNDE</div><h2>Klein anfangen.<br>Viel mitnehmen.</h2><p>Wähle, wie du heute lernen möchtest.</p><div class="modes"><button data-mode="quick" class="mode ${mode==='quick'?'active':''}" aria-pressed="${mode==='quick'}"><span><strong>Kurz & knackig</strong><small>10 Fragen · ca. 5–8 Min.</small></span><span class="radio"></span></button><button data-mode="all" class="mode ${mode==='all'?'active':''}" aria-pressed="${mode==='all'}"><span><strong>Alles durchgehen</strong><small>Alle Fragen deiner Auswahl</small></span><span class="radio"></span></button><button data-mode="review" class="mode ${mode==='review'?'active':''}" aria-pressed="${mode==='review'}"><span><strong>Fehler wiederholen</strong><small>${s.wrong} Fragen brauchen noch Übung</small></span><span class="radio"></span></button></div><button class="primary" id="start" ${!pool().length?'disabled':''}>Lernrunde starten <span class="play">▷</span></button>${!pool().length?'<p class="small">In dieser Auswahl gibt es noch keine offenen Fehler.</p>':''}${saved.session?'<button class="text-button" id="resume">Letzte Runde fortsetzen</button>':''}<div class="save-hint">${storageOK?'Dein Fortschritt wird auf diesem Gerät gespeichert.':'Speichern nicht verfügbar. Du kannst trotzdem lernen.'}</div></aside></section>
-<section class="progress-strip"><div><span class="eyebrow">SCHRITT FÜR SCHRITT</span><h2>Dein Wissen wächst.</h2></div><div class="progress-stats"><div><strong>${s.seen}<span>/${questions.length}</span></strong><small>Fragen bearbeitet</small></div><div><strong>${s.right}</strong><small>Zuletzt richtig</small></div><div><strong>${s.wrong}</strong><small>Noch üben</small></div></div><button class="text-button" id="reset">Lernstand zurücksetzen</button></section>`;
-root.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{filter=b.dataset.filter;home();});root.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;home();});$('#start').onclick=start;$('#resume')?.addEventListener('click',quiz);$('#reset').onclick=()=>{if(confirm('Lernstand und laufende Runde auf diesem Gerät wirklich löschen?')){saved={records:{},session:null};persist();home();}};}
-function start(){const items=shuffle(pool()).slice(0,mode==='quick'?10:Infinity).map(q=>({id:q.id,order:shuffle([0,1,2,3]),answer:null}));if(!items.length)return;saved.session={items,index:0,title:filter==='all'?'Der Wissensmix':categories.find(c=>c.id===filter).name};persist();quiz();focusMain();}
-function quiz(){const session=saved.session;if(!session)return home();const item=session.items[session.index],q=questions.find(q=>q.id===item.id),cat=categories.find(c=>c.id===q.category),answered=item.answer!==null,right=item.answer===q.correct,count=session.items.filter(i=>i.answer!==null).length;
-root.innerHTML=`<div class="quiz-shell"><div class="quiz-nav"><button class="text-button" id="exit">× &nbsp; Runde pausieren</button><span>${esc(session.title)}</span><span>${session.index+1} / ${session.items.length}</span></div><div class="progress-track" role="progressbar" aria-label="Beantwortete Fragen" aria-valuenow="${count}" aria-valuemin="0" aria-valuemax="${session.items.length}"><span style="width:${count/session.items.length*100}%"></span></div><article class="question-card"><div class="question-meta"><span class="category-pill">${icon(cat.symbol)} ${cat.name}</span><span class="subtle">Eine Antwort ist richtig</span></div><h1 tabindex="-1">${q.prompt}</h1><div class="answers">${item.order.map((n,i)=>`<button class="answer ${answered?(n===q.correct?'correct':n===item.answer?'incorrect':'muted'):''}" data-answer="${n}" ${answered?'disabled':''}><span class="answer-letter">${answered&&n===q.correct?'✓':answered&&n===item.answer?'×':String.fromCharCode(65+i)}</span><span>${esc(q.choices[n])}</span>${answered&&n===q.correct?'<span class="answer-status">Richtig</span>':''}</button>`).join('')}</div>${answered?`<section class="feedback ${right?'success':'error'}" aria-live="polite"><div class="feedback-title"><span>${right?'✓':'↺'}</span><h2>${right?'Richtig. Gut gewusst!':'Noch nicht ganz. Jetzt weißt du’s.'}</h2></div>${!right?`<p class="solution"><strong>Richtige Antwort:</strong> ${esc(q.choices[q.correct])}</p>`:''}<h3>Darum geht’s bei dieser Frage</h3><p>${q.explanation}</p><div class="takeaway"><span>MERK DIR</span><strong>${q.takeaway}</strong></div><div class="question-source">${q.origin==='notes'?'Grundlage: deine Lernnotizen':'Ergänzende Lernfrage'}${q.source?` · <a href="${sources[q.source][1]}" target="_blank" rel="noopener noreferrer">Fachquelle ansehen</a>`:''}</div></section><div class="next-row"><span class="subtle">Verstehen ist wichtiger als Tempo.</span><button class="primary" id="next">${session.index===session.items.length-1?'Auswertung ansehen':'Nächste Frage'}</button></div>`:'<p class="answer-hint">Wähle eine Antwort. Die Erklärung erscheint direkt danach.</p>'}</article></div>`;
-$('#exit').onclick=()=>{persist();home();focusMain();};root.querySelectorAll('[data-answer]').forEach(b=>b.onclick=()=>answer(Number(b.dataset.answer)));$('#next')?.addEventListener('click',()=>{if(session.index===session.items.length-1){result();focusMain();}else{session.index++;persist();quiz();focusMain();}});
+import { questions, categories, sources } from "./questions.js";
+const $ = (s) => document.querySelector(s),
+  root = $("#app"),
+  KEY = "frischewissen-v1";
+const icons = {
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/>',
+  grid: '<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',
+  eye: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
+  shield:
+    '<path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z"/><path d="m8 12 3 3 5-6"/>',
+  tag: '<path d="M3 3h8l10 10-8 8L3 11V3Z"/><circle cx="7.5" cy="7.5" r="1"/>',
+  spark: '<path d="m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z"/>',
+};
+const icon = (n) =>
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[n] || icons.spark}</svg>`;
+const esc = (s) =>
+  String(s).replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ],
+  );
+let saved = { records: {}, session: null },
+  storageOK = true;
+try {
+  const data = JSON.parse(localStorage.getItem(KEY));
+  if (
+    data &&
+    typeof data.records === "object" &&
+    data.records &&
+    !Array.isArray(data.records)
+  ) {
+    saved.records = Object.fromEntries(
+      Object.entries(data.records).filter(
+        ([id, v]) =>
+          questions.some((q) => q.id === id) &&
+          v &&
+          typeof v.right === "boolean",
+      ),
+    );
+  }
+  if (
+    data?.session &&
+    Array.isArray(data.session.items) &&
+    data.session.items.length &&
+    data.session.items.every(
+      (x) =>
+        questions.some((q) => q.id === x.id) &&
+        Array.isArray(x.order) &&
+        x.order.length === 4 &&
+        new Set(x.order).size === 4 &&
+        x.order.every((n) => [0, 1, 2, 3].includes(n)) &&
+        (x.answer === null || [0, 1, 2, 3].includes(x.answer)),
+    ) &&
+    Number.isInteger(data.session.index) &&
+    data.session.index >= 0 &&
+    data.session.index < data.session.items.length
+  ) {
+    saved.session = data.session;
+  }
+} catch {
+  storageOK = false;
 }
-function answer(n){const session=saved.session,item=session.items[session.index];if(item.answer!==null)return;item.answer=n;const q=questions.find(q=>q.id===item.id);saved.records[q.id]={right:n===q.correct};persist();quiz();root.querySelector('.feedback')?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'nearest'});}
-function result(){const session=saved.session,correct=session.items.filter(x=>x.answer===questions.find(q=>q.id===x.id).correct).length,wrong=session.items.filter(x=>x.answer!==questions.find(q=>q.id===x.id).correct),total=session.items.length;root.innerHTML=`<section class="result-page"><div class="result-badge">${icon('shield')}</div><div class="eyebrow">DEINE RUNDE IST GESCHAFFT</div><h1 tabindex="-1">${correct===total?'Das sitzt.':'Jede Runde macht dich sicherer.'}</h1><p>Du hast ${correct} von ${total} Fragen richtig beantwortet.<br>${wrong.length?'Die offenen Themen kannst du direkt noch einmal üben.':'Alle Antworten richtig. Nimm dein Wissen mit an die Theke.'}</p><div class="score"><strong>${Math.round(correct/total*100)}<span>%</span></strong><span>richtig beantwortet</span></div><div class="result-actions">${wrong.length?'<button class="primary" id="retry">Fehler dieser Runde üben</button>':''}<button class="${wrong.length?'secondary':'primary'}" id="home">Zur Themenauswahl</button></div><div class="review-list"><h2>Deine Antworten im Überblick</h2>${session.items.map(x=>{const q=questions.find(q=>q.id===x.id),ok=x.answer===q.correct;return `<details><summary><span class="review-status ${ok?'ok':'no'}">${ok?'✓':'×'}</span><span>${q.prompt}</span><span class="detail-plus">+</span></summary><div><p><strong>Deine Antwort:</strong> ${esc(q.choices[x.answer])}</p>${!ok?`<p><strong>Richtige Antwort:</strong> ${esc(q.choices[q.correct])}</p>`:''}<p>${q.explanation}</p><p class="review-takeaway">${q.takeaway}</p></div></details>`;}).join('')}</div></section>`;saved.session=null;persist();$('#home').onclick=()=>{home();focusMain();};$('#retry')?.addEventListener('click',()=>{saved.session={items:shuffle(wrong.map(x=>({id:x.id,order:shuffle([0,1,2,3]),answer:null}))),index:0,title:'Deine Wiederholung'};persist();quiz();focusMain();});}
-$('#source-button').onclick=()=>$('#sources').showModal();$('#close-sources').onclick=()=>$('#sources').close();$('#sources').addEventListener('click',e=>{if(e.target===$('#sources')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close();}});$('#source-links').innerHTML=Object.values(sources).map(s=>`<a href="${s[1]}" target="_blank" rel="noopener noreferrer">${s[0]} <span>↗</span></a>`).join('');home();
+let filter = "all",
+  mode = "quick";
+function persist() {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(saved));
+  } catch {
+    storageOK = false;
+  }
+}
+export function shuffle(a) {
+  const b = [...a];
+  for (let i = b.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [b[i], b[j]] = [b[j], b[i]];
+  }
+  return b;
+}
+function stats() {
+  const vals = Object.values(saved.records);
+  return {
+    seen: vals.length,
+    right: vals.filter((v) => v.right).length,
+    wrong: vals.filter((v) => !v.right).length,
+  };
+}
+function pool() {
+  return questions.filter(
+    (q) =>
+      (filter === "all" || q.category === filter) &&
+      (mode !== "review" || saved.records[q.id]?.right === false),
+  );
+}
+function focusMain() {
+  root.querySelector("h1,h2")?.focus({ preventScroll: true });
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+function home() {
+  const s = stats();
+  root.innerHTML = `<section class="hero"><div class="hero-copy"><div class="eyebrow"><span class="mini-line"></span> SICHER AN DER THEKE</div><h1 tabindex="-1">Frisches Wissen.<br><em>Jeden Tag besser.</em></h1><p>Dein Training für die Frischetheke. Verstehe die Regeln, prüfe dein Wissen und geh mit einem guten Gefühl in die nächste Abfrage.</p><div class="hero-facts"><span>${questions.length} Fragen mit Erklärung</span><span>6 Themenbereiche</span><span>In deinem Tempo</span></div></div><div class="hero-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="art-leaf">${icon("shield")}</div><span class="art-caption">GUTE QUALITÄT<br>BEGINNT MIT WISSEN.</span><span class="art-star">✳</span></div></section>
+<section class="training-layout"><div class="topics"><div class="section-head"><div><div class="eyebrow">DEIN LERNSTOFF</div><h2>Was möchtest du üben?</h2></div><span class="subtle">Aus allen vier Lernseiten</span></div><div class="topic-grid"><button class="topic all-topic ${filter === "all" ? "active" : ""}" data-filter="all" aria-pressed="${filter === "all"}"><span class="topic-icon">${icon("grid")}</span><span><strong>Alles zusammen</strong><small>Der komplette Wissensmix</small></span><span class="topic-count">${questions.length}</span><span class="selection-mark">✓</span></button>${categories.map((c) => `<button class="topic ${filter === c.id ? "active" : ""}" data-filter="${c.id}" aria-pressed="${filter === c.id}"><span class="topic-icon" style="--icon-bg:${c.color}">${icon(c.symbol)}</span><span><strong>${c.name}</strong><small>${c.subtitle}</small></span><span class="topic-count">${questions.filter((q) => q.category === c.id).length}</span><span class="selection-mark">✓</span></button>`).join("")}</div><div class="editor-note"><span class="note-icon">i</span><p><strong>Deine Unterlagen. Verständlich erklärt.</strong><br>Originalthemen plus ergänzende Praxisfragen. Betriebliche Notizen und Fachwissen werden in den Lösungen eingeordnet.</p></div></div>
+<aside class="start-card"><div class="eyebrow">DEINE LERNRUNDE</div><h2>Klein anfangen.<br> Viel mitnehmen.</h2><p>Wähle, wie du heute lernen möchtest.</p><div class="modes"><button data-mode="quick" class="mode ${mode === "quick" ? "active" : ""}" aria-pressed="${mode === "quick"}"><span><strong>Kurz & knackig</strong><small>10 Fragen · ca. 5–8 Min.</small></span><span class="radio"></span></button><button data-mode="all" class="mode ${mode === "all" ? "active" : ""}" aria-pressed="${mode === "all"}"><span><strong>Alles durchgehen</strong><small>Alle Fragen deiner Auswahl</small></span><span class="radio"></span></button><button data-mode="review" class="mode ${mode === "review" ? "active" : ""}" aria-pressed="${mode === "review"}"><span><strong>Fehler wiederholen</strong><small>${s.wrong} Fragen brauchen noch Übung</small></span><span class="radio"></span></button></div><button class="primary" id="start" ${!pool().length ? "disabled" : ""}>Lernrunde starten <span class="play">▷</span></button>${!pool().length ? '<p class="small">In dieser Auswahl gibt es noch keine offenen Fehler.</p>' : ""}${saved.session ? '<button class="text-button" id="resume">Letzte Runde fortsetzen</button>' : ""}<div class="save-hint">${storageOK ? "Dein Fortschritt wird auf diesem Gerät gespeichert." : "Speichern nicht verfügbar. Du kannst trotzdem lernen."}</div></aside></section>
+<section class="progress-strip"><div><span class="eyebrow">SCHRITT FÜR SCHRITT</span><h2>Dein Wissen wächst.</h2></div><div class="progress-stats"><div><strong>${s.seen}<span>/${questions.length}</span></strong><small>Fragen bearbeitet</small></div><div><strong>${s.right}</strong><small>Zuletzt richtig</small></div><div><strong>${s.wrong}</strong><small>Noch üben</small></div></div><button class="text-button" id="reset">Lernstand zurücksetzen</button></section>`;
+  root.querySelectorAll("[data-filter]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        filter = b.dataset.filter;
+        home();
+      }),
+  );
+  root.querySelectorAll("[data-mode]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        mode = b.dataset.mode;
+        home();
+      }),
+  );
+  $("#start").onclick = start;
+  $("#resume")?.addEventListener("click", quiz);
+  $("#reset").onclick = () => {
+    if (
+      confirm("Lernstand und laufende Runde auf diesem Gerät wirklich löschen?")
+    ) {
+      saved = { records: {}, session: null };
+      persist();
+      home();
+    }
+  };
+}
+function start() {
+  const items = shuffle(pool())
+    .slice(0, mode === "quick" ? 10 : Infinity)
+    .map((q) => ({ id: q.id, order: shuffle([0, 1, 2, 3]), answer: null }));
+  if (!items.length) return;
+  saved.session = {
+    items,
+    index: 0,
+    title:
+      filter === "all"
+        ? "Der Wissensmix"
+        : categories.find((c) => c.id === filter).name,
+  };
+  persist();
+  quiz();
+  focusMain();
+}
+function quiz() {
+  const session = saved.session;
+  if (!session) return home();
+  const item = session.items[session.index],
+    q = questions.find((q) => q.id === item.id),
+    cat = categories.find((c) => c.id === q.category),
+    answered = item.answer !== null,
+    right = item.answer === q.correct,
+    count = session.items.filter((i) => i.answer !== null).length;
+  root.innerHTML = `<div class="quiz-shell"><div class="quiz-nav"><button class="text-button" id="exit">× &nbsp; Runde pausieren</button><span>${esc(session.title)}</span><span>${session.index + 1} / ${session.items.length}</span></div><div class="progress-track" role="progressbar" aria-label="Beantwortete Fragen" aria-valuenow="${count}" aria-valuemin="0" aria-valuemax="${session.items.length}"><span style="width:${(count / session.items.length) * 100}%"></span></div><article class="question-card"><div class="question-meta"><span class="category-pill">${icon(cat.symbol)} ${cat.name}</span><span class="subtle">Eine Antwort ist richtig</span></div><h1 tabindex="-1">${q.prompt}</h1><div class="answers">${item.order.map((n, i) => `<button class="answer ${answered ? (n === q.correct ? "correct" : n === item.answer ? "incorrect" : "muted") : ""}" data-answer="${n}" ${answered ? "disabled" : ""}><span class="answer-letter">${answered && n === q.correct ? "✓" : answered && n === item.answer ? "×" : String.fromCharCode(65 + i)}</span><span>${esc(q.choices[n])}</span>${answered && n === q.correct ? '<span class="answer-status">Richtig</span>' : ""}</button>`).join("")}</div>${answered ? `<section class="feedback ${right ? "success" : "error"}" aria-live="polite"><div class="feedback-title"><span>${right ? "✓" : "↺"}</span><h2>${right ? "Richtig. Gut gewusst!" : "Noch nicht ganz. Jetzt weißt du’s."}</h2></div>${!right ? `<p class="solution"><strong>Richtige Antwort:</strong> ${esc(q.choices[q.correct])}</p>` : ""}<h3>Darum geht’s bei dieser Frage</h3><p>${q.explanation}</p><div class="takeaway"><span>MERK DIR</span><strong>${q.takeaway}</strong></div><div class="question-source">${q.origin === "notes" ? "Grundlage: deine Lernnotizen" : "Ergänzende Lernfrage"}${q.source ? ` · <a href="${sources[q.source][1]}" target="_blank" rel="noopener noreferrer">Fachquelle ansehen</a>` : ""}</div></section><div class="next-row"><span class="subtle">Verstehen ist wichtiger als Tempo.</span><button class="primary" id="next">${session.index === session.items.length - 1 ? "Auswertung ansehen" : "Nächste Frage"}</button></div>` : '<p class="answer-hint">Wähle eine Antwort. Die Erklärung erscheint direkt danach.</p>'}</article></div>`;
+  $("#exit").onclick = () => {
+    persist();
+    home();
+    focusMain();
+  };
+  root
+    .querySelectorAll("[data-answer]")
+    .forEach((b) => (b.onclick = () => answer(Number(b.dataset.answer))));
+  $("#next")?.addEventListener("click", () => {
+    if (session.index === session.items.length - 1) {
+      result();
+      focusMain();
+    } else {
+      session.index++;
+      persist();
+      quiz();
+      focusMain();
+    }
+  });
+}
+function answer(n) {
+  const session = saved.session,
+    item = session.items[session.index];
+  if (item.answer !== null) return;
+  item.answer = n;
+  const q = questions.find((q) => q.id === item.id);
+  saved.records[q.id] = { right: n === q.correct };
+  persist();
+  quiz();
+  root
+    .querySelector(".feedback")
+    ?.scrollIntoView({
+      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "instant"
+        : "smooth",
+      block: "nearest",
+    });
+}
+function result() {
+  const session = saved.session,
+    correct = session.items.filter(
+      (x) => x.answer === questions.find((q) => q.id === x.id).correct,
+    ).length,
+    wrong = session.items.filter(
+      (x) => x.answer !== questions.find((q) => q.id === x.id).correct,
+    ),
+    total = session.items.length;
+  root.innerHTML = `<section class="result-page"><div class="result-badge">${icon("shield")}</div><div class="eyebrow">DEINE RUNDE IST GESCHAFFT</div><h1 tabindex="-1">${correct === total ? "Das sitzt." : "Jede Runde macht dich sicherer."}</h1><p>Du hast ${correct} von ${total} Fragen richtig beantwortet.<br>${wrong.length ? "Die offenen Themen kannst du direkt noch einmal üben." : "Alle Antworten richtig. Nimm dein Wissen mit an die Theke."}</p><div class="score"><strong>${Math.round((correct / total) * 100)}<span>%</span></strong><span>richtig beantwortet</span></div><div class="result-actions">${wrong.length ? '<button class="primary" id="retry">Fehler dieser Runde üben</button>' : ""}<button class="${wrong.length ? "secondary" : "primary"}" id="home">Zur Themenauswahl</button></div><div class="review-list"><h2>Deine Antworten im Überblick</h2>${session.items
+    .map((x) => {
+      const q = questions.find((q) => q.id === x.id),
+        ok = x.answer === q.correct;
+      return `<details><summary><span class="review-status ${ok ? "ok" : "no"}">${ok ? "✓" : "×"}</span><span>${q.prompt}</span><span class="detail-plus">+</span></summary><div><p><strong>Deine Antwort:</strong> ${esc(q.choices[x.answer])}</p>${!ok ? `<p><strong>Richtige Antwort:</strong> ${esc(q.choices[q.correct])}</p>` : ""}<p>${q.explanation}</p><p class="review-takeaway">${q.takeaway}</p></div></details>`;
+    })
+    .join("")}</div></section>`;
+  saved.session = null;
+  persist();
+  $("#home").onclick = () => {
+    home();
+    focusMain();
+  };
+  $("#retry")?.addEventListener("click", () => {
+    saved.session = {
+      items: shuffle(
+        wrong.map((x) => ({
+          id: x.id,
+          order: shuffle([0, 1, 2, 3]),
+          answer: null,
+        })),
+      ),
+      index: 0,
+      title: "Deine Wiederholung",
+    };
+    persist();
+    quiz();
+    focusMain();
+  });
+}
+$("#source-button").onclick = () => $("#sources").showModal();
+$("#close-sources").onclick = () => $("#sources").close();
+$("#sources").addEventListener("click", (e) => {
+  if (e.target === $("#sources")) {
+    const r = e.target.getBoundingClientRect();
+    if (
+      e.clientX < r.left ||
+      e.clientX > r.right ||
+      e.clientY < r.top ||
+      e.clientY > r.bottom
+    )
+      e.target.close();
+  }
+});
+$("#source-links").innerHTML = Object.values(sources)
+  .map(
+    (s) =>
+      `<a href="${s[1]}" target="_blank" rel="noopener noreferrer">${s[0]} <span>↗</span></a>`,
+  )
+  .join("");
+home();

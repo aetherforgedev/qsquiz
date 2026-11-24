@@ -1,5 +1,81 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#164c3c"><meta name="description" content="Dein Lernquiz für die Frischetheke: Qualitätssicherung, Hofglück, Hackfleisch, Sensorik und Kennzeichnung. Mit ausführlichen Lösungen."><title>Frischewissen – Sicher an der Theke</title><link rel="icon" href="./icon.svg" type="image/svg+xml"><link rel="stylesheet" href="./style.css"><script type="module" src="./app.js"></script></head>
-<body><header class="topbar"><a class="brand" href="./" aria-label="Frischewissen Startseite"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 25V14C7 6 17 4 26 5c1 10-2 20-12 20H7Z"/><path d="m8 24 12-12M13 19v-7m0 7h7"/></svg><span>frische<span class="brand-light">wissen</span><span class="brand-dot">.</span></span></a><div class="top-right"><span class="desktop-label">DEIN TRAINING FÜR DIE FRISCHETHEKE</span><button class="icon-button" id="source-button" aria-label="Quellen und Lernhinweise öffnen">i</button></div></header>
-<main id="app"></main><footer><span>Mit Wissen wird aus Frische Qualität.</span><span>Privates Lernprojekt · Keine offizielle EDEKA-Schulung</span></footer>
-<dialog id="sources"><div class="dialog-head"><h2>Worauf das Quiz basiert</h2><button class="icon-button" id="close-sources" aria-label="Quellen schließen">×</button></div><p>Alle vier handschriftlichen Lernseiten sind berücksichtigt. Mit „Deine Notizen“ markierte Angaben werden als Inhalt dieser Unterlagen abgefragt; sie sind kein öffentlich geprüfter Vertragstext. Aktuelle Arbeitsanweisungen deines Markts sind für die Praxis maßgeblich.</p><p>Die Einträge „10 Jahre“, „1 Jahr aufbewahren“ und die Ausnahme für grobe und feine Bratwurst sind ausdrücklich als Notizwissen gekennzeichnet. Bei der schwer lesbaren Zeile wurde „grob & fein zerkleinerte Bratwurst“ verstanden. Bitte mit der betrieblichen Unterlage abgleichen.</p><p>Das Karlsruher Schema ist ein strukturiertes sensorisches Bewertungsverfahren. Sehen, Riechen und Schmecken sind Prüfbereiche, keine vollständige Definition. Verdächtige oder rohe tierische Ware wird nicht zur Sicherheitsprüfung verkostet.</p><h3>Ergänzende Fachquellen</h3><div id="source-links"></div><p class="small">Inhalte recherchiert am 24. November 2026. Die Fotos und personenbezogene Daten werden nicht veröffentlicht. Dein Lernstand bleibt in diesem Browser.</p></dialog></body></html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#164c3c" />
+    <meta
+      name="description"
+      content="Dein Lernquiz für die Frischetheke: Qualitätssicherung, Hofglück, Hackfleisch, Sensorik und Kennzeichnung. Mit ausführlichen Lösungen."
+    />
+    <title>Frischewissen – Sicher an der Theke</title>
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./style.css" />
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="Frischewissen Startseite"
+        ><svg viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M7 25V14C7 6 17 4 26 5c1 10-2 20-12 20H7Z" />
+          <path d="m8 24 12-12M13 19v-7m0 7h7" /></svg
+        ><span
+          >frische<span class="brand-light">wissen</span
+          ><span class="brand-dot">.</span></span
+        ></a
+      >
+      <div class="top-right">
+        <span class="desktop-label">DEIN TRAINING FÜR DIE FRISCHETHEKE</span
+        ><button
+          class="icon-button"
+          id="source-button"
+          aria-label="Quellen und Lernhinweise öffnen"
+        >
+          i
+        </button>
+      </div>
+    </header>
+    <main id="app"></main>
+    <footer>
+      <span>Mit Wissen wird aus Frische Qualität.</span
+      ><span>Privates Lernprojekt · Keine offizielle EDEKA-Schulung</span>
+    </footer>
+    <dialog id="sources">
+      <div class="dialog-head">
+        <h2>Worauf das Quiz basiert</h2>
+        <button
+          class="icon-button"
+          id="close-sources"
+          aria-label="Quellen schließen"
+        >
+          ×
+        </button>
+      </div>
+      <p>
+        Alle vier handschriftlichen Lernseiten sind berücksichtigt. Mit „Deine
+        Notizen“ markierte Angaben werden als Inhalt dieser Unterlagen
+        abgefragt; sie sind kein öffentlich geprüfter Vertragstext. Aktuelle
+        Arbeitsanweisungen deines Markts sind für die Praxis maßgeblich.
+      </p>
+      <p>
+        Die Einträge „10 Jahre“, „1 Jahr aufbewahren“ und die Ausnahme für grobe
+        und feine Bratwurst sind ausdrücklich als Notizwissen gekennzeichnet.
+        Bei der schwer lesbaren Zeile wurde „grob & fein zerkleinerte Bratwurst“
+        verstanden. Bitte mit der betrieblichen Unterlage abgleichen.
+      </p>
+      <p>
+        Das Karlsruher Schema ist ein strukturiertes sensorisches
+        Bewertungsverfahren. Sehen, Riechen und Schmecken sind Prüfbereiche,
+        keine vollständige Definition. Verdächtige oder rohe tierische Ware wird
+        nicht zur Sicherheitsprüfung verkostet.
+      </p>
+      <h3>Ergänzende Fachquellen</h3>
+      <div id="source-links"></div>
+      <p class="small">
+        Inhalte recherchiert am 24. November 2026. Die Fotos und
+        personenbezogene Daten werden nicht veröffentlicht. Dein Lernstand
+        bleibt in diesem Browser.
+      </p>
+    </dialog>
+  </body>
+</html>
